@@ -70,6 +70,7 @@ func DefaultRegistry() *Registry {
 	cmd := RealCommander{}
 	return NewRegistry(
 		NewBrew(cmd),
+		NewBrewCask(cmd),
 		NewApt(cmd),
 		NewDnf(cmd),
 		NewPacman(cmd),
@@ -80,6 +81,7 @@ func DefaultRegistry() *Registry {
 		NewChoco(cmd),
 		NewScoop(cmd),
 		NewPip(cmd),
+		NewUv(cmd),
 		NewCargo(cmd),
 		NewNpm(cmd),
 		NewGoInstall(cmd),

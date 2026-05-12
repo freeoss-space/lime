@@ -188,6 +188,7 @@ func TestInstallArgs_AllManagersReturnPackageName(t *testing.T) {
 	}{
 		{managers.NewApt(cmd), "ripgrep"},
 		{managers.NewBrew(cmd), "ripgrep"},
+		{managers.NewBrewCask(cmd), "ripgrep"},
 		{managers.NewDnf(cmd), "ripgrep"},
 		{managers.NewPacman(cmd), "ripgrep"},
 		{managers.NewZypper(cmd), "ripgrep"},
@@ -197,6 +198,7 @@ func TestInstallArgs_AllManagersReturnPackageName(t *testing.T) {
 		{managers.NewChoco(cmd), "ripgrep"},
 		{managers.NewScoop(cmd), "ripgrep"},
 		{managers.NewPip(cmd), "ripgrep"},
+		{managers.NewUv(cmd), "ripgrep"},
 		{managers.NewCargo(cmd), "ripgrep"},
 		{managers.NewNpm(cmd), "ripgrep"},
 	}
@@ -406,4 +408,99 @@ func TestGoInstall_InstallVersion_UsesAtSyntax(t *testing.T) {
 	require.NoError(t, err)
 	require.Len(t, cmd.Calls, 1)
 	assert.Contains(t, cmd.Calls[0], "github.com/user/tool@v1.2.3")
+}
+
+// --- uv ---
+
+func TestUv_IsAvailable_WhenPresent(t *testing.T) {
+	m := managers.NewUv(availableCmd("uv"))
+	assert.True(t, m.IsAvailable(context.Background()))
+}
+
+func TestUv_IsAvailable_WhenAbsent(t *testing.T) {
+	m := managers.NewUv(unavailableCmd())
+	assert.False(t, m.IsAvailable(context.Background()))
+}
+
+func TestUv_Search_ReturnsEmptyOnCommandFailure(t *testing.T) {
+	cmd := &managers.FakeCommander{
+		LookPathResult: map[string]string{"uv": "/usr/bin/uv"},
+		OutputErr:      assert.AnError,
+	}
+	m := managers.NewUv(cmd)
+	results, err := m.Search(context.Background(), "requests")
+	require.NoError(t, err)
+	assert.Empty(t, results)
+}
+
+func TestUv_Search_InvokesCorrectCommand(t *testing.T) {
+	cmd := &managers.FakeCommander{
+		LookPathResult: map[string]string{"uv": "/usr/bin/uv"},
+		OutputData:     []byte("ruff (0.4.0)\n"),
+	}
+	m := managers.NewUv(cmd)
+	_, err := m.Search(context.Background(), "ruff")
+	require.NoError(t, err)
+	require.Len(t, cmd.Calls, 1)
+	assert.Equal(t, "uv", cmd.Calls[0][0])
+	assert.Equal(t, []string{"uv", "pip", "index", "versions", "ruff"}, cmd.Calls[0])
+}
+
+func TestUv_Search_SkipsWarningLines(t *testing.T) {
+	cmd := &managers.FakeCommander{
+		LookPathResult: map[string]string{"uv": "/usr/bin/uv"},
+		OutputData: []byte(
+			"WARNING: something experimental\n" +
+				"requests (2.31.0)\n" +
+				"Available versions: 2.31.0, 2.30.0\n",
+		),
+	}
+	m := managers.NewUv(cmd)
+	results, err := m.Search(context.Background(), "requests")
+	require.NoError(t, err)
+	require.Len(t, results, 1)
+	assert.Equal(t, "requests", results[0].Package)
+	assert.Equal(t, "2.31.0", results[0].Version)
+}
+
+// --- brew-cask ---
+
+func TestBrewCask_InstallVersion_ReturnsError(t *testing.T) {
+	cmd := availableCmd("brew")
+	m := managers.NewBrewCask(cmd)
+	err := m.InstallVersion(context.Background(), "firefox", "120.0")
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "brew-cask")
+}
+
+func TestBrewCask_Search_FiltersHeaders(t *testing.T) {
+	cmd := &managers.FakeCommander{
+		LookPathResult: map[string]string{"brew": "/usr/local/bin/brew"},
+		OutputData:     []byte("==> Casks\nfirefox\ngoogle-chrome\n"),
+	}
+	m := managers.NewBrewCask(cmd)
+	results, err := m.Search(context.Background(), "firefox")
+	require.NoError(t, err)
+	require.Len(t, results, 2)
+	assert.Equal(t, "firefox", results[0].Package)
+	assert.Equal(t, "homebrew-cask", results[0].Repo)
+	assert.Equal(t, "brew-cask", results[0].Manager)
+}
+
+// --- DefaultRegistry ---
+
+func TestDefaultRegistry_ContainsAllManagers(t *testing.T) {
+	reg := managers.DefaultRegistry()
+	wantNames := []string{
+		"brew", "brew-cask",
+		"apt", "dnf", "pacman", "zypper", "apk", "pkg",
+		"winget", "choco", "scoop",
+		"pip", "uv", "cargo", "npm", "go",
+	}
+	for _, name := range wantNames {
+		t.Run(name, func(t *testing.T) {
+			assert.NotNil(t, reg.ByName(name), "manager %q should be registered", name)
+		})
+	}
+	assert.Len(t, reg.All(), len(wantNames))
 }

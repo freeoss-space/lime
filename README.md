@@ -51,18 +51,33 @@ that boilerplate.
 
 ## Supported package managers
 
-| Manager   | Platform          | Binary    |
-|-----------|-------------------|-----------|
-| `brew`    | macOS / Linux     | `brew`    |
-| `apt`     | Debian / Ubuntu   | `apt-get` |
-| `dnf`     | Fedora / RHEL     | `dnf`     |
-| `pacman`  | Arch Linux        | `pacman`  |
-| `zypper`  | openSUSE          | `zypper`  |
-| `apk`     | Alpine Linux      | `apk`     |
-| `pkg`     | FreeBSD           | `pkg`     |
-| `winget`  | Windows           | `winget`  |
-| `choco`   | Windows           | `choco`   |
-| `scoop`   | Windows           | `scoop`   |
+### System package managers
+
+| Manager      | Platform          | Binary    | Versioning |
+|--------------|-------------------|-----------|:----------:|
+| `brew`       | macOS / Linux     | `brew`    | ✓ (`pkg@version`) |
+| `brew-cask`  | macOS             | `brew`    | — |
+| `apt`        | Debian / Ubuntu   | `apt-get` | ✓ (`pkg=version`) |
+| `dnf`        | Fedora / RHEL     | `dnf`     | ✓ (`pkg-version`) |
+| `pacman`     | Arch Linux        | `pacman`  | — |
+| `zypper`     | openSUSE          | `zypper`  | ✓ (`pkg=version`) |
+| `apk`        | Alpine Linux      | `apk`     | ✓ (`pkg=version`) |
+| `pkg`        | FreeBSD           | `pkg`     | ✓ (`pkg-version`) |
+| `winget`     | Windows           | `winget`  | ✓ (`--version`) |
+| `choco`      | Windows           | `choco`   | ✓ (`--version`) |
+| `scoop`      | Windows           | `scoop`   | — |
+
+### Language ecosystem managers
+
+| Manager  | Ecosystem  | Binary  | Install command         | Versioning |
+|----------|------------|---------|-------------------------|:----------:|
+| `uv`     | Python     | `uv`    | `uv tool install`       | ✓ (`pkg==version`) |
+| `pip`    | Python     | `pip3`  | `pip3 install --user`   | ✓ (`pkg==version`) |
+| `cargo`  | Rust       | `cargo` | `cargo install`         | ✓ (`--version`) |
+| `npm`    | Node.js    | `npm`   | `npm install -g`        | ✓ (`pkg@version`) |
+| `go`     | Go         | `go`    | `go install`            | ✓ (`pkg@version`) |
+
+`uv` is preferred over `pip` by default because it is significantly faster and installs tools into isolated environments via `uv tool install`.
 
 ---
 
@@ -212,7 +227,7 @@ internal/
   cli/            — Cobra commands (install, search, config)
   config/         — XDG config loading/saving (TOML)
   repology/       — Repology API client with types
-  managers/       — PackageManager interface + 10 implementations
+  managers/       — PackageManager interface + 16 implementations
   install/        — install orchestration (fallback, confirmation, dry-run)
   search/         — search orchestration (annotation, sorting)
 pkg/

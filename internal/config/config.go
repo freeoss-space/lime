@@ -34,9 +34,9 @@ type Config struct {
 func Default() *Config {
 	return &Config{
 		PreferredManagers: []string{
-			"brew", "apt", "dnf", "pacman", "zypper",
+			"brew", "brew-cask", "apt", "dnf", "pacman", "zypper",
 			"apk", "pkg", "winget", "choco", "scoop",
-			"pip", "cargo", "npm", "go",
+			"uv", "pip", "cargo", "npm", "go",
 		},
 		AutoConfirm:        false,
 		RateLimitPerSecond: DefaultRateLimitPerSecond,
