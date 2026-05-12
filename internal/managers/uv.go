@@ -14,7 +14,7 @@ func NewUv(cmd Commander) *Uv {
 }
 
 func (u *Uv) InstallArgs(pkg string) (string, []string) {
-	return "uv", []string{"pip", "install", pkg}
+	return "uv", []string{"tool", "install", pkg}
 }
 
 func (u *Uv) Install(ctx context.Context, pkg string) error {
@@ -57,9 +57,9 @@ func (u *Uv) Search(ctx context.Context, query string) ([]SearchResult, error) {
 func (u *Uv) SupportsVersioning() bool { return true }
 
 // InstallVersionArgs returns the uv command for a specific version.
-// uv uses the same "pkg==version" syntax as pip.
+// uv tool install uses PEP 508 specifiers: "pkg==version".
 func (u *Uv) InstallVersionArgs(pkg, version string) (string, []string) {
-	return "uv", []string{"pip", "install", pkg + "==" + version}
+	return "uv", []string{"tool", "install", pkg + "==" + version}
 }
 
 func (u *Uv) InstallVersion(ctx context.Context, pkg, version string) error {

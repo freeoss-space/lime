@@ -5,16 +5,26 @@
 # Ordered list of preferred package managers.
 # lime tries each in order and uses the first one available on your system.
 preferred_managers = [
+  # macOS / Linux system managers
   "brew",
-  "apt",
-  "dnf",
-  "pacman",
-  "zypper",
-  "apk",
-  "pkg",
+  "brew-cask",   # Homebrew casks (macOS GUI apps — brew install --cask)
+  # Linux system managers
+  "apt",         # Debian / Ubuntu
+  "dnf",         # Fedora / RHEL / CentOS
+  "pacman",      # Arch Linux
+  "zypper",      # openSUSE
+  "apk",         # Alpine Linux
+  "pkg",         # FreeBSD
+  # Windows system managers
   "winget",
   "choco",
   "scoop",
+  # Language ecosystem managers
+  "uv",          # Python tools (uv tool install — fast, isolated envs)
+  "pip",         # Python packages (pip3 install --user)
+  "cargo",       # Rust crates
+  "npm",         # Node.js packages (npm install -g)
+  "go",          # Go modules (go install)
 ]
 
 # Skip the "Install package?" confirmation prompt.
@@ -26,3 +36,14 @@ rate_limit_per_second = 1
 
 # Per-request HTTP timeout in seconds.
 http_timeout_seconds = 10
+
+# Global cooldown: minimum time between installs of the same package.
+# Prevents reinstalling something that was just installed.
+# Supported formats: "14d" (days), "2w" (weeks), "24h" (hours), "0d" (disabled).
+# Leave empty (default) for no cooldown.
+# default_cooldown = "14d"
+
+# Per-manager cooldown overrides. These take precedence over default_cooldown.
+# [manager_cooldowns]
+# brew = "7d"
+# apt = "0d"

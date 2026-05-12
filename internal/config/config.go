@@ -36,7 +36,7 @@ func Default() *Config {
 		PreferredManagers: []string{
 			"brew", "brew-cask", "apt", "dnf", "pacman", "zypper",
 			"apk", "pkg", "winget", "choco", "scoop",
-			"pip", "uv", "cargo", "npm", "go",
+			"uv", "pip", "cargo", "npm", "go",
 		},
 		AutoConfirm:        false,
 		RateLimitPerSecond: DefaultRateLimitPerSecond,

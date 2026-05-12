@@ -188,6 +188,37 @@ apt = "0d"
 	assert.Equal(t, "0d", cfg.ManagerCooldowns["apt"])
 }
 
+func TestDefault_ContainsAllManagers(t *testing.T) {
+	cfg := config.Default()
+	set := make(map[string]bool, len(cfg.PreferredManagers))
+	for _, m := range cfg.PreferredManagers {
+		set[m] = true
+	}
+	for _, expected := range []string{
+		"brew", "brew-cask", "apt", "dnf", "pacman", "zypper",
+		"apk", "pkg", "winget", "choco", "scoop",
+		"pip", "uv", "cargo", "npm", "go",
+	} {
+		assert.True(t, set[expected], "expected manager %q in defaults", expected)
+	}
+}
+
+func TestDefault_UvBeforePip(t *testing.T) {
+	cfg := config.Default()
+	uvIdx, pipIdx := -1, -1
+	for i, m := range cfg.PreferredManagers {
+		switch m {
+		case "uv":
+			uvIdx = i
+		case "pip":
+			pipIdx = i
+		}
+	}
+	require.NotEqual(t, -1, uvIdx, "uv must be in preferred managers")
+	require.NotEqual(t, -1, pipIdx, "pip must be in preferred managers")
+	assert.Less(t, uvIdx, pipIdx, "uv should appear before pip in preferred managers")
+}
+
 func TestLoad_CooldownDefaultsToEmpty(t *testing.T) {
 	dir := setConfigDir(t)
 

@@ -372,8 +372,8 @@ func TestInstallVersionArgs(t *testing.T) {
 		},
 		{
 			name: "uv", m: managers.NewUv(availableCmd("uv")),
-			pkg: "requests", version: "2.31.0",
-			wantBin: "uv", wantArg: "requests==2.31.0",
+			pkg: "ruff", version: "0.4.0",
+			wantBin: "uv", wantArg: "ruff==0.4.0",
 		},
 	}
 	for _, tt := range tests {
@@ -433,19 +433,20 @@ func TestChoco_InstallVersion_UsesVersionFlag(t *testing.T) {
 
 func TestUv_InstallArgs(t *testing.T) {
 	m := managers.NewUv(availableCmd("uv"))
-	bin, args := m.InstallArgs("requests")
+	bin, args := m.InstallArgs("ruff")
 	assert.Equal(t, "uv", bin)
-	assert.Equal(t, []string{"pip", "install", "requests"}, args)
+	assert.Equal(t, []string{"tool", "install", "ruff"}, args)
 }
 
-func TestUv_InstallVersion_UsesPipEqEqSyntax(t *testing.T) {
+func TestUv_InstallVersion_UsesToolInstallWithEqEqSyntax(t *testing.T) {
 	cmd := availableCmd("uv")
 	m := managers.NewUv(cmd)
-	err := m.InstallVersion(context.Background(), "requests", "2.31.0")
+	err := m.InstallVersion(context.Background(), "ruff", "0.4.0")
 	require.NoError(t, err)
 	require.Len(t, cmd.Calls, 1)
 	assert.Equal(t, "uv", cmd.Calls[0][0])
-	assert.Contains(t, cmd.Calls[0], "requests==2.31.0")
+	assert.Contains(t, cmd.Calls[0], "ruff==0.4.0")
+	assert.Contains(t, cmd.Calls[0], "tool")
 }
 
 func TestUv_Search_ParsesOutput(t *testing.T) {
