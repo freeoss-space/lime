@@ -21,6 +21,13 @@ type Config struct {
 	AutoConfirm        bool     `toml:"auto_confirm"`
 	RateLimitPerSecond float64  `toml:"rate_limit_per_second"`
 	HTTPTimeoutSeconds int      `toml:"http_timeout_seconds"`
+	// DefaultCooldown is the global cooldown duration applied to all installs when
+	// no manager-specific cooldown is configured. Empty string means no cooldown.
+	// Supported formats: "14d", "2w", "24h", "0d".
+	DefaultCooldown string `toml:"default_cooldown"`
+	// ManagerCooldowns maps manager names to cooldown durations, overriding
+	// DefaultCooldown for specific managers. Example: {"brew": "7d", "apt": "0d"}.
+	ManagerCooldowns map[string]string `toml:"manager_cooldowns"`
 }
 
 // Default returns a Config populated with sensible defaults.
@@ -33,6 +40,8 @@ func Default() *Config {
 		AutoConfirm:        false,
 		RateLimitPerSecond: DefaultRateLimitPerSecond,
 		HTTPTimeoutSeconds: DefaultHTTPTimeoutSeconds,
+		DefaultCooldown:    "",
+		ManagerCooldowns:   nil,
 	}
 }
 

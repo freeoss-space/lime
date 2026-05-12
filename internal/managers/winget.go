@@ -46,3 +46,15 @@ func (w *Winget) Search(ctx context.Context, query string) ([]SearchResult, erro
 	}
 	return results, nil
 }
+
+func (w *Winget) SupportsVersioning() bool { return true }
+
+// InstallVersionArgs returns the winget command for a specific version.
+func (w *Winget) InstallVersionArgs(pkg, version string) (string, []string) {
+	return "winget", []string{"install", "--id", pkg, "--version", version, "--silent", "--accept-package-agreements"}
+}
+
+func (w *Winget) InstallVersion(ctx context.Context, pkg, version string) error {
+	bin, args := w.InstallVersionArgs(pkg, version)
+	return w.cmd.Run(ctx, bin, args...)
+}

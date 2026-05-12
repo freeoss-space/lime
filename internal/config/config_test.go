@@ -33,6 +33,9 @@ func TestDefault_HasSaneValues(t *testing.T) {
 	assert.Equal(t, float64(1), cfg.RateLimitPerSecond)
 	assert.Equal(t, 10, cfg.HTTPTimeoutSeconds)
 	assert.False(t, cfg.AutoConfirm)
+	// Cooldown defaults to empty (no cooldown).
+	assert.Empty(t, cfg.DefaultCooldown)
+	assert.Nil(t, cfg.ManagerCooldowns)
 }
 
 func TestDefault_ContainsCommonManagers(t *testing.T) {
@@ -157,4 +160,67 @@ func TestWrite_RoundTrip(t *testing.T) {
 	require.NoError(t, err)
 	assert.Contains(t, string(data), "apt")
 	assert.Contains(t, string(data), "dnf")
+}
+
+// --- Cooldown config ---
+
+func TestLoad_ParsesCooldownConfig(t *testing.T) {
+	dir := setConfigDir(t)
+
+	cfgPath := filepath.Join(dir, "jil", "config.toml")
+	require.NoError(t, os.MkdirAll(filepath.Dir(cfgPath), 0o755))
+
+	content := `
+preferred_managers = ["apt", "brew"]
+default_cooldown = "14d"
+
+[manager_cooldowns]
+brew = "7d"
+apt = "0d"
+`
+	require.NoError(t, os.WriteFile(cfgPath, []byte(content), 0o644))
+
+	cfg, err := config.Load()
+	require.NoError(t, err)
+	assert.Equal(t, "14d", cfg.DefaultCooldown)
+	require.NotNil(t, cfg.ManagerCooldowns)
+	assert.Equal(t, "7d", cfg.ManagerCooldowns["brew"])
+	assert.Equal(t, "0d", cfg.ManagerCooldowns["apt"])
+}
+
+func TestLoad_CooldownDefaultsToEmpty(t *testing.T) {
+	dir := setConfigDir(t)
+
+	// Write a minimal config without cooldown fields.
+	cfgPath := filepath.Join(dir, "jil", "config.toml")
+	require.NoError(t, os.MkdirAll(filepath.Dir(cfgPath), 0o755))
+	require.NoError(t, os.WriteFile(cfgPath, []byte(`preferred_managers = ["apt"]`), 0o644))
+
+	cfg, err := config.Load()
+	require.NoError(t, err)
+	assert.Empty(t, cfg.DefaultCooldown, "missing cooldown should default to empty (no cooldown)")
+	assert.Nil(t, cfg.ManagerCooldowns)
+}
+
+func TestWrite_RoundTrip_WithCooldown(t *testing.T) {
+	dir := setConfigDir(t)
+	path := filepath.Join(dir, "jil", "config.toml")
+	require.NoError(t, os.MkdirAll(filepath.Dir(path), 0o755))
+
+	original := &config.Config{
+		PreferredManagers:  []string{"brew", "apt"},
+		AutoConfirm:        false,
+		RateLimitPerSecond: 1.0,
+		HTTPTimeoutSeconds: 10,
+		DefaultCooldown:    "14d",
+		ManagerCooldowns:   map[string]string{"brew": "7d", "apt": "0d"},
+	}
+
+	require.NoError(t, config.Write(path, original))
+
+	loaded, err := config.Load()
+	require.NoError(t, err)
+	assert.Equal(t, "14d", loaded.DefaultCooldown)
+	assert.Equal(t, "7d", loaded.ManagerCooldowns["brew"])
+	assert.Equal(t, "0d", loaded.ManagerCooldowns["apt"])
 }

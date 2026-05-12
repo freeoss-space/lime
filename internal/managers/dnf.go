@@ -50,3 +50,16 @@ func (d *Dnf) Search(ctx context.Context, query string) ([]SearchResult, error) 
 	}
 	return results, nil
 }
+
+func (d *Dnf) SupportsVersioning() bool { return true }
+
+// InstallVersionArgs returns the dnf command for a specific version.
+// dnf uses the "pkg-version" syntax.
+func (d *Dnf) InstallVersionArgs(pkg, version string) (string, []string) {
+	return "sudo", []string{"dnf", "install", "-y", pkg + "-" + version}
+}
+
+func (d *Dnf) InstallVersion(ctx context.Context, pkg, version string) error {
+	bin, args := d.InstallVersionArgs(pkg, version)
+	return d.cmd.Run(ctx, bin, args...)
+}

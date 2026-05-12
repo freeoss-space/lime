@@ -2,6 +2,7 @@ package managers
 
 import (
 	"context"
+	"fmt"
 	"strings"
 )
 
@@ -32,4 +33,20 @@ func (b *base) searchLines(ctx context.Context, args ...string) ([]string, error
 		}
 	}
 	return lines, nil
+}
+
+// SupportsVersioning returns false by default. Managers that support version-specific
+// installation override this method.
+func (b *base) SupportsVersioning() bool { return false }
+
+// InstallVersionArgs is a placeholder; concrete managers override this.
+// For managers that don't support versioning it is never called by the installer.
+func (b *base) InstallVersionArgs(_, _ string) (string, []string) {
+	return b.binary, nil
+}
+
+// InstallVersion returns an error for managers that do not support versioned installs.
+// Managers that support versioning override this method.
+func (b *base) InstallVersion(_ context.Context, _, _ string) error {
+	return fmt.Errorf("manager %q does not support version-specific installation", b.name)
 }
