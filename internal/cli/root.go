@@ -1,4 +1,4 @@
-// Package cli implements the jil command-line interface using Cobra.
+// Package cli implements the lime command-line interface using Cobra.
 package cli
 
 import (
@@ -27,9 +27,9 @@ var global globalFlags
 // NewRootCmd builds and returns the root cobra.Command.
 func NewRootCmd() *cobra.Command {
 	root := &cobra.Command{
-		Use:   "jil",
+		Use:   "lime",
 		Short: "A cross-platform package installer and search tool",
-		Long: `jil — Just Install it!
+		Long: `lime — Let's Install My Ecosystem
 
 A package manager abstraction layer that searches and installs software
 using the best available package manager on your system.
@@ -73,7 +73,7 @@ func applyNoColor() {
 
 // buildDependencies wires up the shared infrastructure from config.
 func buildDependencies(cfg *config.Config) (*managers.Registry, *repology.Client) {
-	ua := fmt.Sprintf("jil/%s (https://github.com/freeoss-space/lime)", version)
+	ua := fmt.Sprintf("lime/%s (https://github.com/freeoss-space/lime)", version)
 	hc := httpclient.New(httpclient.Options{
 		UserAgent:     ua,
 		RatePerSecond: cfg.RateLimitPerSecond,

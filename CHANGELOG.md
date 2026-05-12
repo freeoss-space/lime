@@ -1,20 +1,20 @@
 # Changelog
 
-All notable changes to jil are documented in this file.
+All notable changes to lime are documented in this file.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
-jil uses [Semantic Versioning](https://semver.org/).
+lime uses [Semantic Versioning](https://semver.org/).
 
 ---
 
 ## [Unreleased]
 
 ### Added
-- Initial release of `jil`
-- `jil install` — install packages via the best available package manager
-- `jil search` — search packages across managers via Repology API
-- `jil config` — open config file in `$EDITOR`
-- `jil config path` — print config file path
+- Initial release of `lime`
+- `lime install` — install packages via the best available package manager
+- `lime search` — search packages across managers via Repology API
+- `lime config` — open config file in `$EDITOR`
+- `lime config path` — print config file path
 - Support for 10 package managers: apt, brew, dnf, pacman, zypper, apk, pkg, winget, choco, scoop
 - XDG Base Directory spec compliance for config location
 - Rate-limited, retry-capable HTTP client (Repology API)

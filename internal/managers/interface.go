@@ -43,7 +43,7 @@ type PackageManager interface {
 type PackageSpec struct {
 	// Name is the package name as understood by the manager.
 	Name string
-	// Manager is an optional explicit manager name. If empty, jil selects one.
+	// Manager is an optional explicit manager name. If empty, lime selects one.
 	Manager string
 	// Version is an optional version spec (e.g. "14.1.1", "20", "3.12").
 	// Empty means "any version".

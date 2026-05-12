@@ -13,14 +13,14 @@ import (
 func newConfigCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "config",
-		Short: "Open the jil configuration file in $EDITOR",
-		Long: `Open the jil configuration file in your preferred editor.
+		Short: "Open the lime configuration file in $EDITOR",
+		Long: `Open the lime configuration file in your preferred editor.
 
 If the config file does not exist, a default one is created first.
 
 The editor is determined by the EDITOR environment variable (fallback: vi).
 
-Example config (~/.config/jil/config.toml):
+Example config (~/.config/lime/config.toml):
   preferred_managers = ["brew", "apt", "dnf", "pacman", "apk"]
   auto_confirm = false
   rate_limit_per_second = 1

@@ -51,11 +51,11 @@ func TestGet_SendsUserAgent(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	c := newClient(httpclient.Options{UserAgent: "jil/1.0 test"})
+	c := newClient(httpclient.Options{UserAgent: "lime/1.0 test"})
 	resp, err := c.Get(context.Background(), srv.URL)
 	require.NoError(t, err)
 	resp.Body.Close()
-	assert.Equal(t, "jil/1.0 test", gotUA)
+	assert.Equal(t, "lime/1.0 test", gotUA)
 }
 
 func TestGet_RetriesOnServerError(t *testing.T) {

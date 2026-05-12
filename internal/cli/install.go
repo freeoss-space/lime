@@ -26,26 +26,26 @@ func newInstallCmd() *cobra.Command {
 		Short: "Install one or more packages",
 		Long: `Install one or more packages using the best available package manager.
 
-jil queries Repology to resolve the canonical package name for each manager,
+lime queries Repology to resolve the canonical package name for each manager,
 then installs using your preferred manager. Falls back to other available
 managers if the preferred one is not installed on the system.
 
 You can request a specific version using the "@" syntax:
 
-  jil install ripgrep@14.1.1
-  jil install nodejs@20
-  jil install python@3.12
+  lime install ripgrep@14.1.1
+  lime install nodejs@20
+  lime install python@3.12
 
 Use --cooldown to skip versions newer than a given age:
 
-  jil install ripgrep --cooldown 14d
-  jil install ripgrep --cooldown 2w
+  lime install ripgrep --cooldown 14d
+  lime install ripgrep --cooldown 2w
 
 Supported cooldown units: h (hours), d (days), w (weeks).
 Configure a global default in config: default_cooldown = "14d"`,
 		Args:    cobra.MinimumNArgs(1),
 		RunE:    func(cmd *cobra.Command, args []string) error { return runInstall(cmd, args, yes, managerArg, cooldown) },
-		Example: "  jil install ripgrep\n  jil install ripgrep@14.1.1\n  jil install -y ripgrep --cooldown 14d",
+		Example: "  lime install ripgrep\n  lime install ripgrep@14.1.1\n  lime install -y ripgrep --cooldown 14d",
 	}
 
 	cmd.Flags().BoolVarP(&yes, "yes", "y", false, "auto-confirm installation without prompt")

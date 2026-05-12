@@ -1,5 +1,5 @@
 // Package versioning provides version specification parsing and matching
-// for the jil package installer.
+// for the lime package installer.
 package versioning
 
 import "strings"

@@ -62,7 +62,7 @@ func TestLoad_ReturnDefaultsWhenNoFile(t *testing.T) {
 func TestLoad_ParsesValidConfig(t *testing.T) {
 	dir := setConfigDir(t)
 
-	cfgPath := filepath.Join(dir, "jil", "config.toml")
+	cfgPath := filepath.Join(dir, "lime", "config.toml")
 	require.NoError(t, os.MkdirAll(filepath.Dir(cfgPath), 0o755))
 
 	content := `
@@ -84,7 +84,7 @@ http_timeout_seconds = 30
 func TestLoad_ReturnsErrorOnInvalidTOML(t *testing.T) {
 	dir := setConfigDir(t)
 
-	cfgPath := filepath.Join(dir, "jil", "config.toml")
+	cfgPath := filepath.Join(dir, "lime", "config.toml")
 	require.NoError(t, os.MkdirAll(filepath.Dir(cfgPath), 0o755))
 	require.NoError(t, os.WriteFile(cfgPath, []byte("not = valid toml [[["), 0o644))
 
@@ -101,7 +101,7 @@ func TestPath_UsesXDGEnv(t *testing.T) {
 
 	path, err := config.Path()
 	require.NoError(t, err)
-	assert.Equal(t, filepath.Join(dir, "jil", "config.toml"), path)
+	assert.Equal(t, filepath.Join(dir, "lime", "config.toml"), path)
 }
 
 func TestPath_UsesAPPDATAOnWindows(t *testing.T) {
@@ -113,7 +113,7 @@ func TestPath_UsesAPPDATAOnWindows(t *testing.T) {
 
 	path, err := config.Path()
 	require.NoError(t, err)
-	assert.Equal(t, filepath.Join(dir, "jil", "config.toml"), path)
+	assert.Equal(t, filepath.Join(dir, "lime", "config.toml"), path)
 }
 
 func TestEnsureExists_CreatesDefaultConfig(t *testing.T) {
@@ -167,7 +167,7 @@ func TestWrite_RoundTrip(t *testing.T) {
 func TestLoad_ParsesCooldownConfig(t *testing.T) {
 	dir := setConfigDir(t)
 
-	cfgPath := filepath.Join(dir, "jil", "config.toml")
+	cfgPath := filepath.Join(dir, "lime", "config.toml")
 	require.NoError(t, os.MkdirAll(filepath.Dir(cfgPath), 0o755))
 
 	content := `
@@ -192,7 +192,7 @@ func TestLoad_CooldownDefaultsToEmpty(t *testing.T) {
 	dir := setConfigDir(t)
 
 	// Write a minimal config without cooldown fields.
-	cfgPath := filepath.Join(dir, "jil", "config.toml")
+	cfgPath := filepath.Join(dir, "lime", "config.toml")
 	require.NoError(t, os.MkdirAll(filepath.Dir(cfgPath), 0o755))
 	require.NoError(t, os.WriteFile(cfgPath, []byte(`preferred_managers = ["apt"]`), 0o644))
 
@@ -204,7 +204,7 @@ func TestLoad_CooldownDefaultsToEmpty(t *testing.T) {
 
 func TestWrite_RoundTrip_WithCooldown(t *testing.T) {
 	dir := setConfigDir(t)
-	path := filepath.Join(dir, "jil", "config.toml")
+	path := filepath.Join(dir, "lime", "config.toml")
 	require.NoError(t, os.MkdirAll(filepath.Dir(path), 0o755))
 
 	original := &config.Config{

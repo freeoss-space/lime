@@ -26,11 +26,11 @@ Results are annotated with:
   - version age and cooldown eligibility when timestamps are available
 
 Examples:
-  jil search ripgrep
-  jil search --json ripgrep`,
+  lime search ripgrep
+  lime search --json ripgrep`,
 		Args:    cobra.ExactArgs(1),
 		RunE:    runSearch,
-		Example: "  jil search ripgrep",
+		Example: "  lime search ripgrep",
 	}
 }
 

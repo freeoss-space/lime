@@ -1,9 +1,9 @@
-# jil configuration file
-# Location: $XDG_CONFIG_HOME/jil/config.toml (default: ~/.config/jil/config.toml)
-# On Windows: %APPDATA%\jil\config.toml
+# lime configuration file
+# Location: $XDG_CONFIG_HOME/lime/config.toml (default: ~/.config/lime/config.toml)
+# On Windows: %APPDATA%\lime\config.toml
 
 # Ordered list of preferred package managers.
-# jil tries each in order and uses the first one available on your system.
+# lime tries each in order and uses the first one available on your system.
 preferred_managers = [
   "brew",
   "apt",

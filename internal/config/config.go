@@ -12,10 +12,10 @@ import (
 const (
 	DefaultRateLimitPerSecond = float64(1)
 	DefaultHTTPTimeoutSeconds = 10
-	appName                   = "jil"
+	appName                   = "lime"
 )
 
-// Config holds all jil configuration.
+// Config holds all lime configuration.
 type Config struct {
 	PreferredManagers  []string `toml:"preferred_managers"`
 	AutoConfirm        bool     `toml:"auto_confirm"`
