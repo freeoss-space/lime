@@ -1,0 +1,28 @@
+# Binaries
+bin/
+dist/
+jil
+*.exe
+
+# Go build artifacts
+*.o
+*.a
+*.so
+
+# Test artifacts
+*.test
+coverage.out
+coverage.html
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# Config (user-local)
+.env
+
+# golangci-lint cache
+.golangci-lint/
