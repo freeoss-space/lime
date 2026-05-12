@@ -244,6 +244,7 @@ func TestAllManagerNames(t *testing.T) {
 	}{
 		{managers.NewApt(cmd), "apt"},
 		{managers.NewBrew(cmd), "brew"},
+		{managers.NewBrewCask(cmd), "brew-cask"},
 		{managers.NewDnf(cmd), "dnf"},
 		{managers.NewPacman(cmd), "pacman"},
 		{managers.NewZypper(cmd), "zypper"},
@@ -253,6 +254,7 @@ func TestAllManagerNames(t *testing.T) {
 		{managers.NewChoco(cmd), "choco"},
 		{managers.NewScoop(cmd), "scoop"},
 		{managers.NewPip(cmd), "pip"},
+		{managers.NewUv(cmd), "uv"},
 		{managers.NewCargo(cmd), "cargo"},
 		{managers.NewNpm(cmd), "npm"},
 		{managers.NewGoInstall(cmd), "go"},
@@ -282,11 +284,13 @@ func TestSupportsVersioning(t *testing.T) {
 		{managers.NewWinget(cmd), "winget", true},
 		{managers.NewChoco(cmd), "choco", true},
 		{managers.NewPip(cmd), "pip", true},
+		{managers.NewUv(cmd), "uv", true},
 		{managers.NewCargo(cmd), "cargo", true},
 		{managers.NewNpm(cmd), "npm", true},
 		{managers.NewGoInstall(cmd), "go", true},
 		{managers.NewPacman(cmd), "pacman", false},
 		{managers.NewScoop(cmd), "scoop", false},
+		{managers.NewBrewCask(cmd), "brew-cask", false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -366,6 +370,11 @@ func TestInstallVersionArgs(t *testing.T) {
 			pkg: "golang.org/x/tools/cmd/goimports", version: "v0.1.0",
 			wantBin: "go", wantArg: "golang.org/x/tools/cmd/goimports@v0.1.0",
 		},
+		{
+			name: "uv", m: managers.NewUv(availableCmd("uv")),
+			pkg: "requests", version: "2.31.0",
+			wantBin: "uv", wantArg: "requests==2.31.0",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -420,4 +429,78 @@ func TestChoco_InstallVersion_UsesVersionFlag(t *testing.T) {
 	assert.Equal(t, "choco", bin)
 	assert.Contains(t, args, "--version")
 	assert.Contains(t, args, "14.1.1")
+}
+
+func TestUv_InstallArgs(t *testing.T) {
+	m := managers.NewUv(availableCmd("uv"))
+	bin, args := m.InstallArgs("requests")
+	assert.Equal(t, "uv", bin)
+	assert.Equal(t, []string{"pip", "install", "requests"}, args)
+}
+
+func TestUv_InstallVersion_UsesPipEqEqSyntax(t *testing.T) {
+	cmd := availableCmd("uv")
+	m := managers.NewUv(cmd)
+	err := m.InstallVersion(context.Background(), "requests", "2.31.0")
+	require.NoError(t, err)
+	require.Len(t, cmd.Calls, 1)
+	assert.Equal(t, "uv", cmd.Calls[0][0])
+	assert.Contains(t, cmd.Calls[0], "requests==2.31.0")
+}
+
+func TestUv_Search_ParsesOutput(t *testing.T) {
+	cmd := &managers.FakeCommander{
+		LookPathResult: map[string]string{"uv": "/usr/bin/uv"},
+		OutputData: []byte(
+			"requests (2.31.0)\n",
+		),
+	}
+	m := managers.NewUv(cmd)
+	results, err := m.Search(context.Background(), "requests")
+	require.NoError(t, err)
+	require.Len(t, results, 1)
+	assert.Equal(t, "requests", results[0].Package)
+	assert.Equal(t, "2.31.0", results[0].Version)
+	assert.Equal(t, "pypi", results[0].Repo)
+}
+
+func TestBrewCask_InstallArgs(t *testing.T) {
+	m := managers.NewBrewCask(availableCmd("brew"))
+	bin, args := m.InstallArgs("firefox")
+	assert.Equal(t, "brew", bin)
+	assert.Equal(t, []string{"install", "--cask", "firefox"}, args)
+}
+
+func TestBrewCask_Install_CallsCorrectCommand(t *testing.T) {
+	cmd := availableCmd("brew")
+	m := managers.NewBrewCask(cmd)
+	err := m.Install(context.Background(), "firefox")
+	require.NoError(t, err)
+	require.Len(t, cmd.Calls, 1)
+	assert.Equal(t, "brew", cmd.Calls[0][0])
+	assert.Contains(t, cmd.Calls[0], "--cask")
+	assert.Contains(t, cmd.Calls[0], "firefox")
+}
+
+func TestBrewCask_Search_FiltersCaskResults(t *testing.T) {
+	cmd := &managers.FakeCommander{
+		LookPathResult: map[string]string{"brew": "/usr/local/bin/brew"},
+		OutputData:     []byte("firefox\ngoogle-chrome\n"),
+	}
+	m := managers.NewBrewCask(cmd)
+	results, err := m.Search(context.Background(), "firefox")
+	require.NoError(t, err)
+	assert.Len(t, results, 2)
+	assert.Equal(t, "firefox", results[0].Package)
+	assert.Equal(t, "homebrew-cask", results[0].Repo)
+}
+
+func TestBrewCask_IsAvailable_UsesBrewBinary(t *testing.T) {
+	m := managers.NewBrewCask(availableCmd("brew"))
+	assert.True(t, m.IsAvailable(context.Background()))
+}
+
+func TestBrewCask_IsAvailable_WhenBrewAbsent(t *testing.T) {
+	m := managers.NewBrewCask(unavailableCmd())
+	assert.False(t, m.IsAvailable(context.Background()))
 }
