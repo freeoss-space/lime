@@ -26,7 +26,7 @@ func execCmd(t *testing.T, args ...string) (stdout, stderr string, err error) {
 func TestRootCmd_Help(t *testing.T) {
 	out, _, err := execCmd(t, "--help")
 	require.NoError(t, err)
-	assert.Contains(t, out, "jil")
+	assert.Contains(t, out, "lime")
 	assert.Contains(t, out, "install")
 	assert.Contains(t, out, "search")
 	assert.Contains(t, out, "config")
@@ -35,7 +35,7 @@ func TestRootCmd_Help(t *testing.T) {
 func TestRootCmd_Version(t *testing.T) {
 	out, _, err := execCmd(t, "--version")
 	require.NoError(t, err)
-	assert.Contains(t, out, "jil")
+	assert.Contains(t, out, "lime")
 }
 
 func TestInstallCmd_Help(t *testing.T) {
@@ -67,7 +67,7 @@ func TestConfigPathCmd(t *testing.T) {
 	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
 	out, _, err := execCmd(t, "config", "path")
 	require.NoError(t, err)
-	assert.Contains(t, out, "jil")
+	assert.Contains(t, out, "lime")
 	assert.Contains(t, out, "config.toml")
 }
 
@@ -108,4 +108,33 @@ func TestInstallCmd_ManagerFlag(t *testing.T) {
 	require.NoError(t, err)
 	f := installCmd.Flags().Lookup("manager")
 	require.NotNil(t, f)
+}
+
+func TestInstallCmd_CooldownFlag(t *testing.T) {
+	root := cli.NewRootCmd()
+	installCmd, _, err := root.Find([]string{"install"})
+	require.NoError(t, err)
+	f := installCmd.Flags().Lookup("cooldown")
+	require.NotNil(t, f, "--cooldown flag should exist on install command")
+	assert.Equal(t, "", f.DefValue, "default cooldown should be empty (no cooldown)")
+}
+
+func TestInstallCmd_HelpMentionsVersionSyntax(t *testing.T) {
+	out, _, err := execCmd(t, "install", "--help")
+	require.NoError(t, err)
+	assert.Contains(t, out, "@", "help should mention @version syntax")
+	assert.Contains(t, strings.ToLower(out), "cooldown")
+}
+
+func TestInstallCmd_HelpMentionsCooldownUnits(t *testing.T) {
+	out, _, err := execCmd(t, "install", "--help")
+	require.NoError(t, err)
+	// Help should mention supported cooldown units
+	assert.Contains(t, out, "14d")
+}
+
+func TestSearchCmd_HelpMentionsAge(t *testing.T) {
+	out, _, err := execCmd(t, "search", "--help")
+	require.NoError(t, err)
+	assert.Contains(t, strings.ToLower(out), "age")
 }

@@ -4,7 +4,9 @@ package search
 import (
 	"context"
 	"sort"
+	"time"
 
+	"github.com/freeoss-space/lime/internal/cooldown"
 	"github.com/freeoss-space/lime/internal/managers"
 	"github.com/freeoss-space/lime/internal/repology"
 )
@@ -25,6 +27,13 @@ type Result struct {
 	Preferred bool
 	// Available indicates the manager binary exists on this system.
 	Available bool
+	// UpdatedAt is the release/update timestamp when provided by Repology.
+	UpdatedAt *time.Time
+	// DaysOld is the age of this version in days when UpdatedAt is known. Nil otherwise.
+	DaysOld *int
+	// CooldownOK reports whether this version passes the active cooldown policy.
+	// Always true when no cooldown is configured.
+	CooldownOK bool
 }
 
 // RepologySearcher is the subset of repology.Client used by the searcher.
@@ -37,6 +46,10 @@ type RepologySearcher interface {
 type Options struct {
 	// PreferredManagers is the ordered preference list from config.
 	PreferredManagers []string
+	// Cooldown is the active cooldown used to compute CooldownOK on results.
+	Cooldown cooldown.Duration
+	// Now is the reference time for age calculations. Zero value uses time.Now().
+	Now time.Time
 }
 
 // Searcher queries Repology and annotates results with local availability.
@@ -68,15 +81,7 @@ func (s *Searcher) Search(ctx context.Context, query string) ([]Result, error) {
 			if mgr == "" {
 				continue
 			}
-			results = append(results, Result{
-				ProjectName: projectName,
-				Manager:     mgr,
-				Package:     p.EffectiveName(projectName),
-				Version:     p.Version,
-				Repo:        p.Repo,
-				Preferred:   preferred[mgr],
-				Available:   available[mgr],
-			})
+			results = append(results, s.makeResult(projectName, mgr, p, preferred, available))
 		}
 	}
 
@@ -114,15 +119,7 @@ func (s *Searcher) GetProject(ctx context.Context, name string) ([]Result, error
 		if mgr == "" {
 			continue
 		}
-		results = append(results, Result{
-			ProjectName: name,
-			Manager:     mgr,
-			Package:     p.EffectiveName(name),
-			Version:     p.Version,
-			Repo:        p.Repo,
-			Preferred:   preferred[mgr],
-			Available:   available[mgr],
-		})
+		results = append(results, s.makeResult(name, mgr, p, preferred, available))
 	}
 
 	sort.Slice(results, func(i, j int) bool {
@@ -137,6 +134,36 @@ func (s *Searcher) GetProject(ctx context.Context, name string) ([]Result, error
 	})
 
 	return results, nil
+}
+
+// makeResult builds a Result from a repology.Package, annotating it with
+// local availability, preference, age, and cooldown eligibility.
+func (s *Searcher) makeResult(projectName, mgr string, p repology.Package, preferred, available map[string]bool) Result {
+	now := s.refTime()
+	r := Result{
+		ProjectName: projectName,
+		Manager:     mgr,
+		Package:     p.EffectiveName(projectName),
+		Version:     p.Version,
+		Repo:        p.Repo,
+		Preferred:   preferred[mgr],
+		Available:   available[mgr],
+		UpdatedAt:   p.UpdatedAt,
+		CooldownOK:  true, // assume OK; updated below when timestamp known
+	}
+	if p.UpdatedAt != nil {
+		age := int(now.Sub(*p.UpdatedAt).Hours() / 24)
+		r.DaysOld = &age
+		r.CooldownOK = !s.opts.Cooldown.Blocks(*p.UpdatedAt, now)
+	}
+	return r
+}
+
+func (s *Searcher) refTime() time.Time {
+	if !s.opts.Now.IsZero() {
+		return s.opts.Now
+	}
+	return time.Now()
 }
 
 func (s *Searcher) availableSet(ctx context.Context) map[string]bool {

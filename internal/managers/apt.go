@@ -42,3 +42,16 @@ func (a *Apt) Search(ctx context.Context, query string) ([]SearchResult, error) 
 	}
 	return results, nil
 }
+
+func (a *Apt) SupportsVersioning() bool { return true }
+
+// InstallVersionArgs returns the apt-get command for a specific version.
+// apt uses the "pkg=version" syntax.
+func (a *Apt) InstallVersionArgs(pkg, version string) (string, []string) {
+	return "sudo", []string{"apt-get", "install", "-y", pkg + "=" + version}
+}
+
+func (a *Apt) InstallVersion(ctx context.Context, pkg, version string) error {
+	bin, args := a.InstallVersionArgs(pkg, version)
+	return a.cmd.Run(ctx, bin, args...)
+}

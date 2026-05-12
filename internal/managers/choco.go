@@ -50,3 +50,15 @@ func (c *Choco) Search(ctx context.Context, query string) ([]SearchResult, error
 	}
 	return results, nil
 }
+
+func (c *Choco) SupportsVersioning() bool { return true }
+
+// InstallVersionArgs returns the choco command for a specific version.
+func (c *Choco) InstallVersionArgs(pkg, version string) (string, []string) {
+	return "choco", []string{"install", pkg, "--version", version, "-y"}
+}
+
+func (c *Choco) InstallVersion(ctx context.Context, pkg, version string) error {
+	bin, args := c.InstallVersionArgs(pkg, version)
+	return c.cmd.Run(ctx, bin, args...)
+}

@@ -49,3 +49,16 @@ func (z *Zypper) Search(ctx context.Context, query string) ([]SearchResult, erro
 	}
 	return results, nil
 }
+
+func (z *Zypper) SupportsVersioning() bool { return true }
+
+// InstallVersionArgs returns the zypper command for a specific version.
+// zypper uses the "pkg=version" syntax.
+func (z *Zypper) InstallVersionArgs(pkg, version string) (string, []string) {
+	return "sudo", []string{"zypper", "install", "-y", pkg + "=" + version}
+}
+
+func (z *Zypper) InstallVersion(ctx context.Context, pkg, version string) error {
+	bin, args := z.InstallVersionArgs(pkg, version)
+	return z.cmd.Run(ctx, bin, args...)
+}

@@ -1,6 +1,6 @@
-# Contributing to jil
+# contributing to lime
 
-Thank you for your interest in contributing! jil follows standard Go project conventions.
+Thank you for your interest in contributing! lime follows standard Go project conventions.
 
 ## Prerequisites
 

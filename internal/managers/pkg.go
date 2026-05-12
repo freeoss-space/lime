@@ -42,3 +42,16 @@ func (p *Pkg) Search(ctx context.Context, query string) ([]SearchResult, error) 
 	}
 	return results, nil
 }
+
+func (p *Pkg) SupportsVersioning() bool { return true }
+
+// InstallVersionArgs returns the pkg command for a specific version.
+// FreeBSD pkg uses the "pkg-version" naming convention.
+func (p *Pkg) InstallVersionArgs(pkg, version string) (string, []string) {
+	return "sudo", []string{"pkg", "install", "-y", pkg + "-" + version}
+}
+
+func (p *Pkg) InstallVersion(ctx context.Context, pkg, version string) error {
+	bin, args := p.InstallVersionArgs(pkg, version)
+	return p.cmd.Run(ctx, bin, args...)
+}

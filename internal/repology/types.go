@@ -1,5 +1,7 @@
 package repology
 
+import "time"
+
 // Package represents one package entry returned by the Repology API.
 // Multiple entries may share the same project name across repositories.
 type Package struct {
@@ -21,6 +23,9 @@ type Package struct {
 	Status string `json:"status,omitempty"`
 	// Families lists the repository families this package belongs to.
 	Families []string `json:"families,omitempty"`
+	// UpdatedAt is the timestamp of the last version change in Repology, when
+	// provided by the API. Used for cooldown filtering. Nil when unavailable.
+	UpdatedAt *time.Time `json:"versionupdated,omitempty"`
 }
 
 // EffectiveName returns the most specific package name available.
@@ -54,6 +59,9 @@ var repoFamilyMap = map[string]string{
 	"winget":     "winget",
 	"chocolatey": "choco",
 	"scoop":      "scoop",
+	"pypi":       "pip",
+	"crates_io":  "cargo",
+	"npmjs":      "npm",
 }
 
 // ManagerForRepo returns the local package manager name for a Repology repo

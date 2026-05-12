@@ -1,14 +1,14 @@
-# jil — Just Install it!
+# lime — Let's Install My Ecosystem
 
 [![CI](https://github.com/freeoss-space/lime/actions/workflows/ci.yml/badge.svg)](https://github.com/freeoss-space/lime/actions/workflows/ci.yml)
 [![Go Reference](https://pkg.go.dev/badge/github.com/freeoss-space/lime.svg)](https://pkg.go.dev/github.com/freeoss-space/lime)
 [![License: AGPL-3.0](https://img.shields.io/badge/License-AGPL--3.0-blue.svg)](LICENSE)
 
-`jil` is a cross-platform package installer and search abstraction layer.
-You say **what** to install; jil figures out **how** based on what's available on your system.
+`lime` is a cross-platform package installer and search abstraction layer.
+You say **what** to install; lime figures out **how** based on what's available on your system.
 
 ```
-$ jil install ripgrep
+$ lime install ripgrep
 
 Install package?
 
@@ -22,14 +22,14 @@ Install package?
 
 ---
 
-## Why jil?
+## Why lime?
 
 Different systems have different package managers. Shell scripts that install
-software must special-case `brew`, `apt`, `dnf`, `pacman`… jil eliminates
+software must special-case `brew`, `apt`, `dnf`, `pacman`… lime eliminates
 that boilerplate.
 
-- **One command across distros** — `jil install ripgrep` works on Ubuntu, Arch, Fedora, macOS, Windows.
-- **Smart fallback** — if your preferred manager doesn't have a package, jil tries the next one.
+- **One command across distros** — `lime install ripgrep` works on Ubuntu, Arch, Fedora, macOS, Windows.
+- **Smart fallback** — if your preferred manager doesn't have a package, lime tries the next one.
 - **Repology-powered** — uses [Repology](https://repology.org) to find the correct package name per manager.
 - **Non-interactive friendly** — use `-y` and `--dry-run` in scripts and CI.
 
@@ -43,7 +43,7 @@ that boilerplate.
 - Dry-run mode (`--dry-run`) to preview commands
 - JSON output (`--json`) for scripting
 - Rate-limited, retry-capable Repology API client
-- XDG-compliant config (`~/.config/jil/config.toml`)
+- XDG-compliant config (`~/.config/lime/config.toml`)
 - Colored output (respects `NO_COLOR`)
 - Cross-platform: Linux, macOS, Windows
 
@@ -71,7 +71,7 @@ that boilerplate.
 ### From source (recommended)
 
 ```bash
-go install github.com/freeoss-space/lime/cmd/jil@latest
+go install github.com/freeoss-space/lime/cmd/lime@latest
 ```
 
 ### Build locally
@@ -80,7 +80,7 @@ go install github.com/freeoss-space/lime/cmd/jil@latest
 git clone https://github.com/freeoss-space/lime
 cd lime
 make build
-# binary at: bin/jil
+# binary at: bin/lime
 ```
 
 ### Download release binary
@@ -96,29 +96,29 @@ Pre-built binaries for Linux, macOS, and Windows are available on the
 
 ```bash
 # Install a single package
-jil install ripgrep
+lime install ripgrep
 
 # Install multiple packages
-jil install ripgrep fd bat
+lime install ripgrep fd bat
 
 # Skip confirmation prompt
-jil install -y ripgrep
+lime install -y ripgrep
 
 # Force a specific manager
-jil install --manager brew ripgrep
+lime install --manager brew ripgrep
 
 # Preview without executing
-jil install --dry-run ripgrep
+lime install --dry-run ripgrep
 ```
 
 ### Search packages
 
 ```bash
 # Search Repology for packages matching "ripgrep"
-jil search ripgrep
+lime search ripgrep
 
 # JSON output for scripting
-jil search --json ripgrep
+lime search --json ripgrep
 ```
 
 Example search output:
@@ -135,10 +135,10 @@ dnf      ripgrep   14.0.3     fedora_40
 
 ```bash
 # Open config in $EDITOR
-jil config
+lime config
 
 # Print config file path
-jil config path
+lime config path
 ```
 
 ### Global flags
@@ -158,9 +158,9 @@ Config file location:
 
 | Platform      | Path                                    |
 |---------------|-----------------------------------------|
-| Linux / macOS | `$XDG_CONFIG_HOME/jil/config.toml`      |
-|               | `~/.config/jil/config.toml` (fallback)  |
-| Windows       | `%APPDATA%\jil\config.toml`             |
+| Linux / macOS | `$XDG_CONFIG_HOME/lime/config.toml`      |
+|               | `~/.config/lime/config.toml` (fallback)  |
+| Windows       | `%APPDATA%\lime\config.toml`             |
 
 Example config:
 
@@ -190,24 +190,24 @@ See [`examples/config.toml`](examples/config.toml) for a fully annotated example
 
 ## Repology
 
-jil uses the [Repology API](https://repology.org/api) to resolve package names
+lime uses the [Repology API](https://repology.org/api) to resolve package names
 across repositories. Repology aggregates package metadata from hundreds of
 repositories worldwide.
 
 **API usage:**
-- jil sends a custom `User-Agent` header: `jil/<version> (https://github.com/freeoss-space/lime)`
+- lime sends a custom `User-Agent` header: `lime/<version> (https://github.com/freeoss-space/lime)`
 - Rate limiting is enforced client-side (default: 1 request/second)
 - Failed requests are retried with exponential backoff
-- jil respects the [Repology API guidelines](https://repology.org/api)
+- lime respects the [Repology API guidelines](https://repology.org/api)
 
-If you find jil useful, consider [supporting Repology](https://repology.org/donate).
+If you find lime useful, consider [supporting Repology](https://repology.org/donate).
 
 ---
 
 ## Architecture
 
 ```
-cmd/jil/          — main entry point (ldflags version injection)
+cmd/lime/          — main entry point (ldflags version injection)
 internal/
   cli/            — Cobra commands (install, search, config)
   config/         — XDG config loading/saving (TOML)

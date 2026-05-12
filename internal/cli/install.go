@@ -11,40 +11,51 @@ import (
 	"github.com/freeoss-space/lime/internal/config"
 	"github.com/freeoss-space/lime/internal/install"
 	"github.com/freeoss-space/lime/internal/managers"
+	"github.com/freeoss-space/lime/internal/versioning"
 )
 
 func newInstallCmd() *cobra.Command {
 	var (
 		yes        bool
 		managerArg string
+		cooldown   string
 	)
 
 	cmd := &cobra.Command{
-		Use:   "install <package> [package...]",
+		Use:   "install <package[@version]> [package...]",
 		Short: "Install one or more packages",
 		Long: `Install one or more packages using the best available package manager.
 
-jil queries Repology to resolve the canonical package name for each manager,
+lime queries Repology to resolve the canonical package name for each manager,
 then installs using your preferred manager. Falls back to other available
 managers if the preferred one is not installed on the system.
 
-Examples:
-  jil install ripgrep
-  jil install ripgrep fd bat
-  jil install -y ripgrep
-  jil install --manager brew ripgrep`,
+You can request a specific version using the "@" syntax:
+
+  lime install ripgrep@14.1.1
+  lime install nodejs@20
+  lime install python@3.12
+
+Use --cooldown to skip versions newer than a given age:
+
+  lime install ripgrep --cooldown 14d
+  lime install ripgrep --cooldown 2w
+
+Supported cooldown units: h (hours), d (days), w (weeks).
+Configure a global default in config: default_cooldown = "14d"`,
 		Args:    cobra.MinimumNArgs(1),
-		RunE:    func(cmd *cobra.Command, args []string) error { return runInstall(cmd, args, yes, managerArg) },
-		Example: "  jil install ripgrep\n  jil install -y ripgrep fd bat",
+		RunE:    func(cmd *cobra.Command, args []string) error { return runInstall(cmd, args, yes, managerArg, cooldown) },
+		Example: "  lime install ripgrep\n  lime install ripgrep@14.1.1\n  lime install -y ripgrep --cooldown 14d",
 	}
 
 	cmd.Flags().BoolVarP(&yes, "yes", "y", false, "auto-confirm installation without prompt")
 	cmd.Flags().StringVar(&managerArg, "manager", "", "force a specific package manager")
+	cmd.Flags().StringVar(&cooldown, "cooldown", "", "skip versions newer than this age (e.g. 14d, 2w, 24h)")
 
 	return cmd
 }
 
-func runInstall(cmd *cobra.Command, pkgs []string, yes bool, managerArg string) error {
+func runInstall(cmd *cobra.Command, pkgs []string, yes bool, managerArg, cooldownArg string) error {
 	cfg, err := config.Load()
 	if err != nil {
 		return fmt.Errorf("loading config: %w", err)
@@ -58,7 +69,12 @@ func runInstall(cmd *cobra.Command, pkgs []string, yes bool, managerArg string) 
 
 	specs := make([]managers.PackageSpec, len(pkgs))
 	for i, p := range pkgs {
-		specs[i] = managers.PackageSpec{Name: p, Manager: managerArg}
+		name, vspec := versioning.ParsePackageArg(p)
+		specs[i] = managers.PackageSpec{
+			Name:    name,
+			Manager: managerArg,
+			Version: vspec.Raw,
+		}
 	}
 
 	opts := install.Options{
@@ -67,6 +83,9 @@ func runInstall(cmd *cobra.Command, pkgs []string, yes bool, managerArg string) 
 		PreferredManagers: cfg.PreferredManagers,
 		Stdout:            cmd.OutOrStdout(),
 		Stdin:             os.Stdin,
+		Cooldown:          cooldownArg,
+		DefaultCooldown:   cfg.DefaultCooldown,
+		ManagerCooldowns:  cfg.ManagerCooldowns,
 	}
 
 	installer := install.New(reg, rep, opts)
@@ -93,8 +112,13 @@ func printInstallResults(cmd *cobra.Command, results []install.Result) error {
 			hasErr = true
 		default:
 			if !global.dryRun {
-				fmt.Fprintf(cmd.OutOrStdout(), "%s installed %s via %s\n",
-					color.GreenString("✓"), r.Spec.Name, r.Manager)
+				if r.Version != "" {
+					fmt.Fprintf(cmd.OutOrStdout(), "%s installed %s@%s via %s\n",
+						color.GreenString("✓"), r.Spec.Name, r.Version, r.Manager)
+				} else {
+					fmt.Fprintf(cmd.OutOrStdout(), "%s installed %s via %s\n",
+						color.GreenString("✓"), r.Spec.Name, r.Manager)
+				}
 			}
 		}
 	}

@@ -42,3 +42,16 @@ func (a *Apk) Search(ctx context.Context, query string) ([]SearchResult, error) 
 	}
 	return results, nil
 }
+
+func (a *Apk) SupportsVersioning() bool { return true }
+
+// InstallVersionArgs returns the apk command for a specific version.
+// apk uses the "pkg=version" syntax.
+func (a *Apk) InstallVersionArgs(pkg, version string) (string, []string) {
+	return "sudo", []string{"apk", "add", pkg + "=" + version}
+}
+
+func (a *Apk) InstallVersion(ctx context.Context, pkg, version string) error {
+	bin, args := a.InstallVersionArgs(pkg, version)
+	return a.cmd.Run(ctx, bin, args...)
+}

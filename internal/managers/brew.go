@@ -41,3 +41,16 @@ func (b *Brew) Search(ctx context.Context, query string) ([]SearchResult, error)
 	}
 	return results, nil
 }
+
+func (b *Brew) SupportsVersioning() bool { return true }
+
+// InstallVersionArgs returns the brew install command for a specific version.
+// Brew uses the "pkg@version" formula naming convention.
+func (b *Brew) InstallVersionArgs(pkg, version string) (string, []string) {
+	return "brew", []string{"install", pkg + "@" + version}
+}
+
+func (b *Brew) InstallVersion(ctx context.Context, pkg, version string) error {
+	bin, args := b.InstallVersionArgs(pkg, version)
+	return b.cmd.Run(ctx, bin, args...)
+}

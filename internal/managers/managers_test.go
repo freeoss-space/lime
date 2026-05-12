@@ -252,10 +252,172 @@ func TestAllManagerNames(t *testing.T) {
 		{managers.NewWinget(cmd), "winget"},
 		{managers.NewChoco(cmd), "choco"},
 		{managers.NewScoop(cmd), "scoop"},
+		{managers.NewPip(cmd), "pip"},
+		{managers.NewCargo(cmd), "cargo"},
+		{managers.NewNpm(cmd), "npm"},
+		{managers.NewGoInstall(cmd), "go"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			assert.Equal(t, tt.name, tt.m.Name())
 		})
 	}
+}
+
+// --- SupportsVersioning ---
+
+func TestSupportsVersioning(t *testing.T) {
+	cmd := unavailableCmd()
+	tests := []struct {
+		m       managers.PackageManager
+		name    string
+		support bool
+	}{
+		{managers.NewApt(cmd), "apt", true},
+		{managers.NewBrew(cmd), "brew", true},
+		{managers.NewDnf(cmd), "dnf", true},
+		{managers.NewZypper(cmd), "zypper", true},
+		{managers.NewApk(cmd), "apk", true},
+		{managers.NewPkg(cmd), "pkg", true},
+		{managers.NewWinget(cmd), "winget", true},
+		{managers.NewChoco(cmd), "choco", true},
+		{managers.NewPip(cmd), "pip", true},
+		{managers.NewCargo(cmd), "cargo", true},
+		{managers.NewNpm(cmd), "npm", true},
+		{managers.NewGoInstall(cmd), "go", true},
+		{managers.NewPacman(cmd), "pacman", false},
+		{managers.NewScoop(cmd), "scoop", false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equal(t, tt.support, tt.m.SupportsVersioning())
+		})
+	}
+}
+
+// --- InstallVersionArgs ---
+
+func TestInstallVersionArgs(t *testing.T) {
+	tests := []struct {
+		name    string
+		m       managers.PackageManager
+		pkg     string
+		version string
+		wantBin string
+		wantArg string // expected substring in args
+	}{
+		{
+			name: "apt", m: managers.NewApt(availableCmd("apt-get")),
+			pkg: "ripgrep", version: "13.0.0",
+			wantBin: "sudo", wantArg: "ripgrep=13.0.0",
+		},
+		{
+			name: "brew", m: managers.NewBrew(availableCmd("brew")),
+			pkg: "ripgrep", version: "14.1.1",
+			wantBin: "brew", wantArg: "ripgrep@14.1.1",
+		},
+		{
+			name: "dnf", m: managers.NewDnf(availableCmd("dnf")),
+			pkg: "ripgrep", version: "14.0.0",
+			wantBin: "sudo", wantArg: "ripgrep-14.0.0",
+		},
+		{
+			name: "zypper", m: managers.NewZypper(availableCmd("zypper")),
+			pkg: "ripgrep", version: "14.0.0",
+			wantBin: "sudo", wantArg: "ripgrep=14.0.0",
+		},
+		{
+			name: "apk", m: managers.NewApk(availableCmd("apk")),
+			pkg: "ripgrep", version: "14.0.0",
+			wantBin: "sudo", wantArg: "ripgrep=14.0.0",
+		},
+		{
+			name: "pkg", m: managers.NewPkg(availableCmd("pkg")),
+			pkg: "ripgrep", version: "14.0.0",
+			wantBin: "sudo", wantArg: "ripgrep-14.0.0",
+		},
+		{
+			name: "winget", m: managers.NewWinget(availableCmd("winget")),
+			pkg: "ripgrep", version: "14.1.1",
+			wantBin: "winget", wantArg: "14.1.1",
+		},
+		{
+			name: "choco", m: managers.NewChoco(availableCmd("choco")),
+			pkg: "ripgrep", version: "14.1.1",
+			wantBin: "choco", wantArg: "14.1.1",
+		},
+		{
+			name: "pip", m: managers.NewPip(availableCmd("pip3")),
+			pkg: "requests", version: "2.31.0",
+			wantBin: "pip3", wantArg: "requests==2.31.0",
+		},
+		{
+			name: "cargo", m: managers.NewCargo(availableCmd("cargo")),
+			pkg: "ripgrep", version: "14.1.1",
+			wantBin: "cargo", wantArg: "14.1.1",
+		},
+		{
+			name: "npm", m: managers.NewNpm(availableCmd("npm")),
+			pkg: "typescript", version: "5.0.0",
+			wantBin: "npm", wantArg: "typescript@5.0.0",
+		},
+		{
+			name: "go", m: managers.NewGoInstall(availableCmd("go")),
+			pkg: "golang.org/x/tools/cmd/goimports", version: "v0.1.0",
+			wantBin: "go", wantArg: "golang.org/x/tools/cmd/goimports@v0.1.0",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			bin, args := tt.m.InstallVersionArgs(tt.pkg, tt.version)
+			assert.Equal(t, tt.wantBin, bin)
+			assert.Contains(t, args, tt.wantArg)
+		})
+	}
+}
+
+func TestInstallVersion_CallsCorrectCommand(t *testing.T) {
+	cmd := availableCmd("apt-get")
+	m := managers.NewApt(cmd)
+	err := m.InstallVersion(context.Background(), "ripgrep", "13.0.0")
+	require.NoError(t, err)
+	require.Len(t, cmd.Calls, 1)
+	assert.Equal(t, "sudo", cmd.Calls[0][0])
+	assert.Contains(t, cmd.Calls[0], "ripgrep=13.0.0")
+}
+
+func TestInstallVersion_UnsupportedManagerReturnsError(t *testing.T) {
+	cmd := availableCmd("pacman")
+	m := managers.NewPacman(cmd)
+	err := m.InstallVersion(context.Background(), "ripgrep", "14.0.0")
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "pacman")
+}
+
+func TestBrew_InstallVersion_UsesAtSyntax(t *testing.T) {
+	cmd := availableCmd("brew")
+	m := managers.NewBrew(cmd)
+	err := m.InstallVersion(context.Background(), "ripgrep", "14.1.1")
+	require.NoError(t, err)
+	require.Len(t, cmd.Calls, 1)
+	assert.Equal(t, "brew", cmd.Calls[0][0])
+	assert.Contains(t, cmd.Calls[0], "ripgrep@14.1.1")
+}
+
+func TestWinget_InstallVersion_UsesVersionFlag(t *testing.T) {
+	cmd := availableCmd("winget")
+	m := managers.NewWinget(cmd)
+	bin, args := m.InstallVersionArgs("ripgrep", "14.1.1")
+	assert.Equal(t, "winget", bin)
+	assert.Contains(t, args, "--version")
+	assert.Contains(t, args, "14.1.1")
+}
+
+func TestChoco_InstallVersion_UsesVersionFlag(t *testing.T) {
+	cmd := availableCmd("choco")
+	m := managers.NewChoco(cmd)
+	bin, args := m.InstallVersionArgs("ripgrep", "14.1.1")
+	assert.Equal(t, "choco", bin)
+	assert.Contains(t, args, "--version")
+	assert.Contains(t, args, "14.1.1")
 }
