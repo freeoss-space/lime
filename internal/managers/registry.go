@@ -85,6 +85,21 @@ func DefaultRegistry() *Registry {
 		NewCargo(cmd),
 		NewNpm(cmd),
 		NewGoInstall(cmd),
+		NewFlatpak(cmd),
+		NewSnap(cmd),
+		NewNix(cmd),
+		NewConda(cmd),
+		NewMamba(cmd),
+		NewGem(cmd),
+		NewYarn(cmd),
+		NewPnpm(cmd),
+		NewPipx(cmd),
+		NewMise(cmd),
+		NewAsdf(cmd),
+		NewPkgin(cmd),
+		NewEmerge(cmd),
+		NewOpkg(cmd),
+		NewHelm(cmd),
 	)
 }
 
