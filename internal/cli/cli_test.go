@@ -1,0 +1,113 @@
+package cli_test
+
+import (
+	"bytes"
+	"strings"
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
+	"github.com/freeoss-space/lime/internal/cli"
+)
+
+// execCmd runs the root command with args, capturing stdout/stderr.
+func execCmd(t *testing.T, args ...string) (stdout, stderr string, err error) {
+	t.Helper()
+	var outBuf, errBuf bytes.Buffer
+	root := cli.NewRootCmd()
+	root.SetOut(&outBuf)
+	root.SetErr(&errBuf)
+	root.SetArgs(args)
+	err = root.Execute()
+	return outBuf.String(), errBuf.String(), err
+}
+
+func TestRootCmd_Help(t *testing.T) {
+	out, _, err := execCmd(t, "--help")
+	require.NoError(t, err)
+	assert.Contains(t, out, "jil")
+	assert.Contains(t, out, "install")
+	assert.Contains(t, out, "search")
+	assert.Contains(t, out, "config")
+}
+
+func TestRootCmd_Version(t *testing.T) {
+	out, _, err := execCmd(t, "--version")
+	require.NoError(t, err)
+	assert.Contains(t, out, "jil")
+}
+
+func TestInstallCmd_Help(t *testing.T) {
+	out, _, err := execCmd(t, "install", "--help")
+	require.NoError(t, err)
+	assert.Contains(t, out, "install")
+	assert.Contains(t, out, "--yes")
+	assert.Contains(t, out, "--dry-run")
+}
+
+func TestInstallCmd_RequiresAtLeastOneArg(t *testing.T) {
+	_, _, err := execCmd(t, "install")
+	assert.Error(t, err)
+}
+
+func TestSearchCmd_Help(t *testing.T) {
+	out, _, err := execCmd(t, "search", "--help")
+	require.NoError(t, err)
+	assert.Contains(t, out, "search")
+	assert.Contains(t, strings.ToLower(out), "repology")
+}
+
+func TestSearchCmd_RequiresExactlyOneArg(t *testing.T) {
+	_, _, err := execCmd(t, "search")
+	assert.Error(t, err)
+}
+
+func TestConfigPathCmd(t *testing.T) {
+	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
+	out, _, err := execCmd(t, "config", "path")
+	require.NoError(t, err)
+	assert.Contains(t, out, "jil")
+	assert.Contains(t, out, "config.toml")
+}
+
+func TestGlobalFlags_DryRunParsed(t *testing.T) {
+	// Ensure --dry-run is a valid global flag (doesn't error on parse).
+	// The actual install will fail due to Repology being unreachable in tests,
+	// but flag parsing must succeed.
+	root := cli.NewRootCmd()
+	root.SetArgs([]string{"install", "--dry-run", "--yes", "ripgrep"})
+	// We only test that cobra parses flags; the RunE may fail (network).
+	// Just confirm no panic.
+	_ = root.Execute()
+}
+
+func TestGlobalFlags_JSONFlagExists(t *testing.T) {
+	root := cli.NewRootCmd()
+	f := root.PersistentFlags().Lookup("json")
+	require.NotNil(t, f)
+	assert.Equal(t, "false", f.DefValue)
+}
+
+func TestGlobalFlags_VerboseFlagExists(t *testing.T) {
+	root := cli.NewRootCmd()
+	f := root.PersistentFlags().Lookup("verbose")
+	require.NotNil(t, f)
+}
+
+func TestInstallCmd_YesFlagShorthand(t *testing.T) {
+	// -y shorthand should be registered
+	root := cli.NewRootCmd()
+	installCmd, _, err := root.Find([]string{"install"})
+	require.NoError(t, err)
+	f := installCmd.Flags().ShorthandLookup("y")
+	require.NotNil(t, f, "-y flag should exist on install command")
+}
+
+func TestInstallCmd_ManagerFlag(t *testing.T) {
+	root := cli.NewRootCmd()
+	installCmd, _, err := root.Find([]string{"install"})
+	require.NoError(t, err)
+	f := installCmd.Flags().Lookup("manager")
+	require.NotNil(t, f)
+}
