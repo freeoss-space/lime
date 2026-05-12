@@ -3,6 +3,7 @@ package config_test
 import (
 	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -10,6 +11,20 @@ import (
 
 	"github.com/freeoss-space/lime/internal/config"
 )
+
+// setConfigDir redirects the OS-appropriate config base directory to a temp
+// directory for the duration of the test.  On Windows, APPDATA is used; on
+// all other platforms, XDG_CONFIG_HOME is used.
+func setConfigDir(t *testing.T) string {
+	t.Helper()
+	dir := t.TempDir()
+	if runtime.GOOS == "windows" {
+		t.Setenv("APPDATA", dir)
+	} else {
+		t.Setenv("XDG_CONFIG_HOME", dir)
+	}
+	return dir
+}
 
 func TestDefault_HasSaneValues(t *testing.T) {
 	cfg := config.Default()
@@ -32,8 +47,7 @@ func TestDefault_ContainsCommonManagers(t *testing.T) {
 }
 
 func TestLoad_ReturnDefaultsWhenNoFile(t *testing.T) {
-	dir := t.TempDir()
-	t.Setenv("XDG_CONFIG_HOME", dir)
+	setConfigDir(t)
 
 	cfg, err := config.Load()
 	require.NoError(t, err)
@@ -43,8 +57,7 @@ func TestLoad_ReturnDefaultsWhenNoFile(t *testing.T) {
 }
 
 func TestLoad_ParsesValidConfig(t *testing.T) {
-	dir := t.TempDir()
-	t.Setenv("XDG_CONFIG_HOME", dir)
+	dir := setConfigDir(t)
 
 	cfgPath := filepath.Join(dir, "jil", "config.toml")
 	require.NoError(t, os.MkdirAll(filepath.Dir(cfgPath), 0o755))
@@ -66,8 +79,7 @@ http_timeout_seconds = 30
 }
 
 func TestLoad_ReturnsErrorOnInvalidTOML(t *testing.T) {
-	dir := t.TempDir()
-	t.Setenv("XDG_CONFIG_HOME", dir)
+	dir := setConfigDir(t)
 
 	cfgPath := filepath.Join(dir, "jil", "config.toml")
 	require.NoError(t, os.MkdirAll(filepath.Dir(cfgPath), 0o755))
@@ -78,6 +90,9 @@ func TestLoad_ReturnsErrorOnInvalidTOML(t *testing.T) {
 }
 
 func TestPath_UsesXDGEnv(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("XDG_CONFIG_HOME is not the config mechanism on Windows")
+	}
 	dir := t.TempDir()
 	t.Setenv("XDG_CONFIG_HOME", dir)
 
@@ -86,9 +101,20 @@ func TestPath_UsesXDGEnv(t *testing.T) {
 	assert.Equal(t, filepath.Join(dir, "jil", "config.toml"), path)
 }
 
-func TestEnsureExists_CreatesDefaultConfig(t *testing.T) {
+func TestPath_UsesAPPDATAOnWindows(t *testing.T) {
+	if runtime.GOOS != "windows" {
+		t.Skip("APPDATA is only the config mechanism on Windows")
+	}
 	dir := t.TempDir()
-	t.Setenv("XDG_CONFIG_HOME", dir)
+	t.Setenv("APPDATA", dir)
+
+	path, err := config.Path()
+	require.NoError(t, err)
+	assert.Equal(t, filepath.Join(dir, "jil", "config.toml"), path)
+}
+
+func TestEnsureExists_CreatesDefaultConfig(t *testing.T) {
+	setConfigDir(t)
 
 	path, err := config.EnsureExists()
 	require.NoError(t, err)
@@ -97,15 +123,13 @@ func TestEnsureExists_CreatesDefaultConfig(t *testing.T) {
 	_, err = os.Stat(path)
 	require.NoError(t, err, "config file should exist")
 
-	// Should be loadable after creation.
 	cfg, err := config.Load()
 	require.NoError(t, err)
 	assert.NotEmpty(t, cfg.PreferredManagers)
 }
 
 func TestEnsureExists_IdempotentWhenFileExists(t *testing.T) {
-	dir := t.TempDir()
-	t.Setenv("XDG_CONFIG_HOME", dir)
+	setConfigDir(t)
 
 	path1, err := config.EnsureExists()
 	require.NoError(t, err)
@@ -129,12 +153,6 @@ func TestWrite_RoundTrip(t *testing.T) {
 
 	require.NoError(t, config.Write(path, original))
 
-	loaded, err := config.Load()
-	// Load uses XDG, so write manually and read back.
-	_ = loaded
-	_ = err
-
-	// Verify the file content is valid TOML by loading it directly.
 	data, err := os.ReadFile(path)
 	require.NoError(t, err)
 	assert.Contains(t, string(data), "apt")

@@ -66,9 +66,7 @@ func runSearch(cmd *cobra.Command, args []string) error {
 
 func printSearchResults(cmd *cobra.Command, results []search.Result) error {
 	w := tabwriter.NewWriter(cmd.OutOrStdout(), 0, 0, 2, ' ', 0)
-	defer w.Flush()
 
-	// Header
 	fmt.Fprintln(w, color.HiBlackString("MANAGER\tPACKAGE\tVERSION\tREPO\tAVAIL"))
 
 	for _, r := range results {
@@ -87,5 +85,5 @@ func printSearchResults(cmd *cobra.Command, results []search.Result) error {
 		fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\n",
 			mgr, r.Package, version, r.Repo, avail)
 	}
-	return nil
+	return w.Flush()
 }

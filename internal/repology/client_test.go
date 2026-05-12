@@ -25,13 +25,6 @@ func newTestClient(srv *httptest.Server) *repology.Client {
 	return repology.NewWithBaseURL(repology.HTTPGetterFromClient(hc), srv.URL)
 }
 
-// httpGetterFunc is a function that implements HTTPGetter for tests.
-type httpGetterFunc func(ctx context.Context, url string) (*http.Response, error)
-
-func (f httpGetterFunc) Get(ctx context.Context, url string) (*http.Response, error) {
-	return f(ctx, url)
-}
-
 // fakeRipgrepPackages returns representative Repology-style response data.
 func fakeRipgrepPackages() []repology.Package {
 	return []repology.Package{

@@ -72,13 +72,11 @@ func TestConfigPathCmd(t *testing.T) {
 }
 
 func TestGlobalFlags_DryRunParsed(t *testing.T) {
-	// Ensure --dry-run is a valid global flag (doesn't error on parse).
-	// The actual install will fail due to Repology being unreachable in tests,
-	// but flag parsing must succeed.
+	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
+	// Ensure --dry-run is a valid global flag (flag parsing must not error).
+	// RunE may fail due to network; we only assert no panic.
 	root := cli.NewRootCmd()
 	root.SetArgs([]string{"install", "--dry-run", "--yes", "ripgrep"})
-	// We only test that cobra parses flags; the RunE may fail (network).
-	// Just confirm no panic.
 	_ = root.Execute()
 }
 

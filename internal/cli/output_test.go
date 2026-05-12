@@ -90,9 +90,6 @@ func TestInstallCmd_NoArgs_Error(t *testing.T) {
 
 func TestInstallCmd_DryRunWithYes(t *testing.T) {
 	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
-	// This will attempt to contact Repology and fall back gracefully.
-	// We only assert the command doesn't panic.
-	_ = func() {
-		execCmd(t, "install", "--dry-run", "-y", "ripgrep")
-	}
+	// Exercise --dry-run path; exact output varies by platform.
+	_, _, _ = execCmd(t, "install", "--dry-run", "-y", "ripgrep")
 }

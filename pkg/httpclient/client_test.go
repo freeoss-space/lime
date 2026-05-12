@@ -30,7 +30,7 @@ func TestNew_AppliesDefaults(t *testing.T) {
 }
 
 func TestGet_Success(t *testing.T) {
-	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write([]byte(`{"ok":true}`))
 	}))
@@ -60,7 +60,7 @@ func TestGet_SendsUserAgent(t *testing.T) {
 
 func TestGet_RetriesOnServerError(t *testing.T) {
 	var calls atomic.Int32
-	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		n := calls.Add(1)
 		if n <= 2 {
 			w.WriteHeader(http.StatusInternalServerError)
@@ -80,7 +80,7 @@ func TestGet_RetriesOnServerError(t *testing.T) {
 
 func TestGet_RetriesOnTooManyRequests(t *testing.T) {
 	var calls atomic.Int32
-	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		n := calls.Add(1)
 		if n == 1 {
 			w.WriteHeader(http.StatusTooManyRequests)
@@ -98,7 +98,7 @@ func TestGet_RetriesOnTooManyRequests(t *testing.T) {
 }
 
 func TestGet_ExhaustsRetriesAndErrors(t *testing.T) {
-	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusServiceUnavailable)
 	}))
 	defer srv.Close()
@@ -109,7 +109,7 @@ func TestGet_ExhaustsRetriesAndErrors(t *testing.T) {
 }
 
 func TestGet_RespectsContextCancellation(t *testing.T) {
-	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		time.Sleep(2 * time.Second)
 		w.WriteHeader(http.StatusOK)
 	}))
@@ -125,7 +125,7 @@ func TestGet_RespectsContextCancellation(t *testing.T) {
 
 func TestGet_DoesNotRetryNonRetryableStatus(t *testing.T) {
 	var calls atomic.Int32
-	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		calls.Add(1)
 		w.WriteHeader(http.StatusNotFound)
 	}))
@@ -141,7 +141,7 @@ func TestGet_DoesNotRetryNonRetryableStatus(t *testing.T) {
 
 func TestGet_EnforcesRateLimit(t *testing.T) {
 	var calls atomic.Int32
-	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		calls.Add(1)
 		w.WriteHeader(http.StatusOK)
 	}))

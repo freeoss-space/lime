@@ -93,11 +93,12 @@ func Write(path string, cfg *Config) error {
 	if err != nil {
 		return fmt.Errorf("creating config file: %w", err)
 	}
-	defer f.Close()
-
-	enc := toml.NewEncoder(f)
-	if err := enc.Encode(cfg); err != nil {
+	if err := toml.NewEncoder(f).Encode(cfg); err != nil {
+		_ = f.Close()
 		return fmt.Errorf("encoding config: %w", err)
+	}
+	if err := f.Close(); err != nil {
+		return fmt.Errorf("closing config file: %w", err)
 	}
 	return nil
 }

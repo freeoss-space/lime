@@ -49,22 +49,17 @@ func (r *Registry) Preferred(ctx context.Context, prefs []string) []PackageManag
 		idx[p] = i
 	}
 
-	// Separate preferred vs unpreferred, maintaining stable order within each.
 	preferred := make([]PackageManager, 0, len(avail))
 	rest := make([]PackageManager, 0, len(avail))
-	ordered := make([]*sortEntry, 0, len(avail))
-	_ = ordered
 
 	for _, m := range avail {
-		if i, ok := idx[m.Name()]; ok {
-			_ = i
+		if _, ok := idx[m.Name()]; ok {
 			preferred = append(preferred, m)
 		} else {
 			rest = append(rest, m)
 		}
 	}
 
-	// Sort preferred by prefs index.
 	sortByPreference(preferred, idx)
 
 	return append(preferred, rest...)
@@ -85,11 +80,6 @@ func DefaultRegistry() *Registry {
 		NewChoco(cmd),
 		NewScoop(cmd),
 	)
-}
-
-type sortEntry struct {
-	m   PackageManager
-	idx int
 }
 
 func sortByPreference(ms []PackageManager, idx map[string]int) {

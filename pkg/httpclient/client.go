@@ -122,7 +122,7 @@ func (c *Client) Get(ctx context.Context, url string) (*http.Response, error) {
 
 		// Drain and close so the connection can be reused.
 		_, _ = io.Copy(io.Discard, resp.Body)
-		resp.Body.Close()
+		_ = resp.Body.Close()
 		c.log.Warn("retryable status", "attempt", attempt, "status", resp.StatusCode)
 	}
 
