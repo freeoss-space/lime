@@ -496,6 +496,16 @@ func TestDefaultRegistry_ContainsAllManagers(t *testing.T) {
 		"apt", "dnf", "pacman", "zypper", "apk", "pkg",
 		"winget", "choco", "scoop",
 		"pip", "uv", "cargo", "npm", "go",
+		"flatpak", "snap", "nix",
+		"conda", "mamba",
+		"gem",
+		"yarn", "pnpm",
+		"pipx",
+		"mise", "asdf",
+		"pkgin",
+		"emerge",
+		"opkg",
+		"helm",
 	}
 	for _, name := range wantNames {
 		t.Run(name, func(t *testing.T) {
