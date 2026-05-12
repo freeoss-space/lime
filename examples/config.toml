@@ -1,0 +1,28 @@
+# jil configuration file
+# Location: $XDG_CONFIG_HOME/jil/config.toml (default: ~/.config/jil/config.toml)
+# On Windows: %APPDATA%\jil\config.toml
+
+# Ordered list of preferred package managers.
+# jil tries each in order and uses the first one available on your system.
+preferred_managers = [
+  "brew",
+  "apt",
+  "dnf",
+  "pacman",
+  "zypper",
+  "apk",
+  "pkg",
+  "winget",
+  "choco",
+  "scoop",
+]
+
+# Skip the "Install package?" confirmation prompt.
+auto_confirm = false
+
+# Maximum Repology API requests per second.
+# Repology asks consumers to be gentle; do not set above 1.
+rate_limit_per_second = 1
+
+# Per-request HTTP timeout in seconds.
+http_timeout_seconds = 10
