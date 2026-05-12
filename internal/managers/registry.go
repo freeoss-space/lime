@@ -79,6 +79,10 @@ func DefaultRegistry() *Registry {
 		NewWinget(cmd),
 		NewChoco(cmd),
 		NewScoop(cmd),
+		NewPip(cmd),
+		NewCargo(cmd),
+		NewNpm(cmd),
+		NewGoInstall(cmd),
 	)
 }
 

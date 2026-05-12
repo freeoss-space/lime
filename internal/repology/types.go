@@ -59,6 +59,9 @@ var repoFamilyMap = map[string]string{
 	"winget":     "winget",
 	"chocolatey": "choco",
 	"scoop":      "scoop",
+	"pypi":       "pip",
+	"crates_io":  "cargo",
+	"npmjs":      "npm",
 }
 
 // ManagerForRepo returns the local package manager name for a Repology repo

@@ -252,6 +252,10 @@ func TestAllManagerNames(t *testing.T) {
 		{managers.NewWinget(cmd), "winget"},
 		{managers.NewChoco(cmd), "choco"},
 		{managers.NewScoop(cmd), "scoop"},
+		{managers.NewPip(cmd), "pip"},
+		{managers.NewCargo(cmd), "cargo"},
+		{managers.NewNpm(cmd), "npm"},
+		{managers.NewGoInstall(cmd), "go"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -277,6 +281,10 @@ func TestSupportsVersioning(t *testing.T) {
 		{managers.NewPkg(cmd), "pkg", true},
 		{managers.NewWinget(cmd), "winget", true},
 		{managers.NewChoco(cmd), "choco", true},
+		{managers.NewPip(cmd), "pip", true},
+		{managers.NewCargo(cmd), "cargo", true},
+		{managers.NewNpm(cmd), "npm", true},
+		{managers.NewGoInstall(cmd), "go", true},
 		{managers.NewPacman(cmd), "pacman", false},
 		{managers.NewScoop(cmd), "scoop", false},
 	}
@@ -337,6 +345,26 @@ func TestInstallVersionArgs(t *testing.T) {
 			name: "choco", m: managers.NewChoco(availableCmd("choco")),
 			pkg: "ripgrep", version: "14.1.1",
 			wantBin: "choco", wantArg: "14.1.1",
+		},
+		{
+			name: "pip", m: managers.NewPip(availableCmd("pip3")),
+			pkg: "requests", version: "2.31.0",
+			wantBin: "pip3", wantArg: "requests==2.31.0",
+		},
+		{
+			name: "cargo", m: managers.NewCargo(availableCmd("cargo")),
+			pkg: "ripgrep", version: "14.1.1",
+			wantBin: "cargo", wantArg: "14.1.1",
+		},
+		{
+			name: "npm", m: managers.NewNpm(availableCmd("npm")),
+			pkg: "typescript", version: "5.0.0",
+			wantBin: "npm", wantArg: "typescript@5.0.0",
+		},
+		{
+			name: "go", m: managers.NewGoInstall(availableCmd("go")),
+			pkg: "golang.org/x/tools/cmd/goimports", version: "v0.1.0",
+			wantBin: "go", wantArg: "golang.org/x/tools/cmd/goimports@v0.1.0",
 		},
 	}
 	for _, tt := range tests {
